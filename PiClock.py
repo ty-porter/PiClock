@@ -7,6 +7,7 @@ import time
 from PIL import Image
 from apikey import apikey
 from location import locationCode
+import pytz
 
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
@@ -14,12 +15,10 @@ class PiClock(AppBase):
     self.getData()
 
   def getData(self):
-    self.date = str(datetime.datetime.now())
-
     URL = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
-    weatherRequest = requests.get(URL)
-    self.weather = weatherRequest.json()
-    
+    #weatherRequest = requests.get(URL)
+    #self.weather = weatherRequest.json()
+
   def run(self):
     offscreen_canvas = self.matrix.CreateFrameCanvas()
 
@@ -47,18 +46,37 @@ class PiClock(AppBase):
     bottom_bar_y = 63
 
     # Set current temp from API call
-    currentTemp = str(self.weather[0]['Temperature']['Imperial']['Value'])
+    #currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+
+    # Set time format
+    fmt = '%H:%M'
 
     while True: 
+
+      # Clock functions
+
+      # Create datetime object and localize it
+      d_naive = datetime.datetime.now()
+      timezone = pytz.timezone("America/Chicago")
+      d_aware = timezone.localize(d_naive)
+
+      # Set current time & ante/post meridiem (AM/PM)
+      currentTime = d_aware.strftime(fmt)
+      meridiem = d_aware.strftime('%p')
+
+      # Set day of the week
+      currentDay = d_aware.strftime('%A')
+      currentDate = d_aware.strftime('%B %d')
+
       offscreen_canvas.Clear()
 
       # Draw time
-      graphics.DrawText(offscreen_canvas, largeFont, x_pos, y_pos, timeColor, "12:34")
-      graphics.DrawText(offscreen_canvas, smallFont, x_pos + 52, y_pos, timeColor, "PM")
+      graphics.DrawText(offscreen_canvas, largeFont, x_pos, y_pos, timeColor, currentTime)
+      graphics.DrawText(offscreen_canvas, smallFont, x_pos + 52, y_pos, timeColor, meridiem)
 
       # Draw date
-      graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 6, timeColor, "Thursday")
-      graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 13, timeColor, "August 15")
+      graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 6, timeColor, currentDay)
+      graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 13, timeColor, currentDate)
 
       # Draw Hi/Lo temp & rain chance
       # hi_icon.thumbnail((11, 9))
@@ -72,7 +90,7 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, smallFont, x_pos + 23, bottom_bar_y, timeColor, "59")
 
       # Display weather data
-      graphics.DrawText(offscreen_canvas, medFont, x_pos, y_pos + 35, timeColor, currentTemp)
+      #graphics.DrawText(offscreen_canvas, medFont, x_pos, y_pos + 35, timeColor, currentTime)
 
       time.sleep(0.05)
       offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
