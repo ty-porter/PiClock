@@ -5,15 +5,20 @@ import datetime
 from rgbmatrix import graphics
 import time
 from PIL import Image
+from apikey import apikey
+from location import locationCode
 
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
     super(PiClock, self).__init__(*args, **kwargs)
-    self.getDate()
+    self.getData()
 
-  def getDate(self):
-    global date
-    date = str(datetime.datetime.now())
+  def getData(self):
+    self.date = str(datetime.datetime.now())
+
+    URL = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
+    weatherRequest = requests.get(URL)
+    self.weather = weatherRequest.json()
     
   def run(self):
     offscreen_canvas = self.matrix.CreateFrameCanvas()
@@ -41,6 +46,9 @@ class PiClock(AppBase):
     y_pos = 14
     bottom_bar_y = 63
 
+    # Set current temp from API call
+    currentTemp = str(self.weather[0]['Temperature']['Imperial']['Value'])
+
     while True: 
       offscreen_canvas.Clear()
 
@@ -62,6 +70,9 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, smallFont, x_pos + 6, bottom_bar_y, timeColor, "79")
       graphics.DrawText(offscreen_canvas, smallFont, x_pos + 15, bottom_bar_y, loColor, "LO")
       graphics.DrawText(offscreen_canvas, smallFont, x_pos + 23, bottom_bar_y, timeColor, "59")
+
+      # Display weather data
+      graphics.DrawText(offscreen_canvas, medFont, x_pos, y_pos + 35, timeColor, currentTemp)
 
       time.sleep(0.05)
       offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
