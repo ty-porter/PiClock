@@ -44,12 +44,10 @@ class PiClock(AppBase):
     x_pos = 2
     y_pos = 14
     bottom_bar_y = 63
+    time_x_pos = 2
 
     # Set current temp from API call
     #currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
-
-    # Set time format
-    fmt = '%H:%M'
 
     while True: 
 
@@ -61,7 +59,22 @@ class PiClock(AppBase):
       d_aware = timezone.localize(d_naive)
 
       # Set current time & ante/post meridiem (AM/PM)
-      currentTime = d_aware.strftime(fmt)
+      currentHour = str( int( d_aware.strftime('%I') ) )
+      currentMinute = d_aware.strftime('%M')
+
+      # Blink function for colon
+      if int( d_aware.strftime('%f') ) > 499999:
+        blink = ":"
+      else:
+        blink = ' '
+
+      # If single digit hour, adjust time position
+      if len(currentHour) == 1:
+        time_x_pos = 12
+
+      # Build the clock value
+      currentTime = currentHour + blink + currentMinute
+
       meridiem = d_aware.strftime('%p')
 
       # Set day of the week
@@ -71,7 +84,7 @@ class PiClock(AppBase):
       offscreen_canvas.Clear()
 
       # Draw time
-      graphics.DrawText(offscreen_canvas, largeFont, x_pos, y_pos, timeColor, currentTime)
+      graphics.DrawText(offscreen_canvas, largeFont, time_x_pos, y_pos, timeColor, currentTime)
       graphics.DrawText(offscreen_canvas, smallFont, x_pos + 52, y_pos, timeColor, meridiem)
 
       # Draw date
