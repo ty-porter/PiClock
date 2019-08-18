@@ -15,9 +15,39 @@ class PiClock(AppBase):
     self.getData()
 
   def getData(self):
+    # Set an initial API call datetime object to prevent multiple API calls
+    self.callTimer = datetime.datetime.now()
+
     URL = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
     #weatherRequest = requests.get(URL)
     #self.weather = weatherRequest.json()
+    self.selectCurrentWeatherIcon()
+
+  def selectCurrentWeatherIcon(self):
+    # weatherIconNum = int( self.weather['WeatherIcon'] )
+    weatherIconNum = 1
+    
+    def weatherIconFile(num):
+      if num < 3 or num == 33 or num == 34:
+        return 'sunny'
+      elif (num > 2 and num < 6) or ( num > 34 and num < 38 ):
+        return 'partsunny'
+      elif (num > 5 and num < 12) or ( num > 37 and num < 39 ):
+        return 'cloudy'
+      elif (num > 11 and num < 15) or ( num > 38 and num < 40 ) or num == 18:
+        return 'rain'
+      elif (num > 14 and num < 18) or ( num > 40 and num < 43 ):
+        return 'tstorm'
+      elif (num > 18 and num < 24) or ( num > 42 and num < 45 ):
+        return 'snow'
+      elif num > 23 and num < 30:
+        return "mix"
+      elif num == 32:
+        return "windy"
+      else:
+        return "unknown"
+
+    self.sunny_icon = Image.open('./images/' + weatherIconFile(weatherIconNum) +'.png')
 
   def run(self):
     offscreen_canvas = self.matrix.CreateFrameCanvas()
@@ -36,10 +66,6 @@ class PiClock(AppBase):
     hiColor = graphics.Color(255, 0, 0)
     loColor = graphics.Color(0, 0, 255)
 
-    # Load images
-    # hi_icon = Image.open('hi.png')
-    # lo_icon = Image.open('lo.png')
-
     # Set text positions
     x_pos = 2
     y_pos = 14
@@ -57,6 +83,11 @@ class PiClock(AppBase):
       d_naive = datetime.datetime.now()
       timezone = pytz.timezone("America/Chicago")
       d_aware = timezone.localize(d_naive)
+
+      # Make a new API call if the call timer is greater than 30 minutes
+      if (d_naive - self.callTimer).total_seconds() >= 1800:
+        print('another API call!')
+        self.getData()
 
       # Set current time & ante/post meridiem (AM/PM)
       currentHour = str( int( d_aware.strftime('%I') ) )
@@ -91,11 +122,9 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 6, timeColor, currentDay)
       graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 13, timeColor, currentDate)
 
-      # Draw Hi/Lo temp & rain chance
-      # hi_icon.thumbnail((11, 9))
-      # offscreen_canvas.SetImage(hi_icon.convert('RGB'), 0, 52)
-      # lo_icon.thumbnail((11, 9))
-      # offscreen_canvas.SetImage(lo_icon.convert('RGB'), 12, 52)
+      # Draw current weather icon
+      self.sunny_icon.thumbnail((15, 18))
+      offscreen_canvas.SetImage(self.sunny_icon.convert('RGB'), 1, 29)
 
       graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
       graphics.DrawText(offscreen_canvas, smallFont, x_pos + 6, bottom_bar_y, timeColor, "79")
