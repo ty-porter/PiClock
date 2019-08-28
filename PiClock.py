@@ -8,6 +8,7 @@ from PIL import Image
 from apikey import apikey
 from location import locationCode
 import pytz
+from dummy import parseDummyData
 
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
@@ -19,13 +20,20 @@ class PiClock(AppBase):
     self.callTimer = datetime.datetime.now()
 
     URL = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
-    #weatherRequest = requests.get(URL)
-    #self.weather = weatherRequest.json()
+    
+    # Uncomment these lines to get actual data!!!
+    ######################################
+    # weatherRequest = requests.get(URL)
+    # self.weather = weatherRequest.json()
+    ######################################
+
+    dummyData = parseDummyData() ## Dummy data
+    self.weather = dummyData     ## Dummy data
+
     self.selectCurrentWeatherIcon()
 
   def selectCurrentWeatherIcon(self):
-    # weatherIconNum = int( self.weather['WeatherIcon'] )
-    weatherIconNum = 1
+    weatherIconNum = int( self.weather['WeatherIcon'] )
     
     def weatherIconFile(num):
       if num < 3 or num == 33 or num == 34:
@@ -73,7 +81,7 @@ class PiClock(AppBase):
     time_x_pos = 2
 
     # Set current temp from API call
-    #currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+    currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
 
     while True: 
 
