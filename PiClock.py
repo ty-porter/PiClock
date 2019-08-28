@@ -8,7 +8,7 @@ from PIL import Image
 from apikey import apikey
 from location import locationCode
 import pytz
-from dummy import Dummy
+from apicaller import ApiCaller
 
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
@@ -19,17 +19,9 @@ class PiClock(AppBase):
     # Set an initial API call datetime object to prevent multiple API calls
     self.callTimer = datetime.datetime.now()
 
-    URL = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
-    
-    # Uncomment these lines to get actual data!!!
-    ######################################
-    # weatherRequest = requests.get(URL)
-    # self.weather = weatherRequest.json()
-    ######################################
-
-    dummy = Dummy()
-    self.weather = dummy.jsonData    ## Dummy data
-    print(self.weather)
+    # Calls API, or reverts to using cached data if too many calls have been made
+    caller = ApiCaller()      
+    self.weather = caller.jsonData   
 
     self.selectCurrentWeatherIcon()
 
@@ -56,7 +48,7 @@ class PiClock(AppBase):
       else:
         return "unknown"
 
-    self.sunny_icon = Image.open('./images/' + weatherIconFile(weatherIconNum) +'.png')
+    self.weather_icon = Image.open('./images/' + weatherIconFile(weatherIconNum) +'.png')
 
   def run(self):
     offscreen_canvas = self.matrix.CreateFrameCanvas()
@@ -75,14 +67,25 @@ class PiClock(AppBase):
     hiColor = graphics.Color(255, 0, 0)
     loColor = graphics.Color(0, 0, 255)
 
+    # Set current temp & weather data from API call
+    currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+    currentWeather = self.weather[0]['WeatherText']
+    
     # Set text positions
     x_pos = 2
     y_pos = 14
     bottom_bar_y = 63
     time_x_pos = 2
-
-    # Set current temp from API call
-    currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+    current_weather_pos = x_pos + 16
+    degree_pos = 23
+    
+    if len(currentTemp) == 2:
+      degree_pos += 6
+    elif len(currentTemp) > 2:
+      degree_pos += 12
+    
+    # Load rain chance icon
+    rain_icon = Image.open('./images/drop.png')
 
     while True: 
 
@@ -95,7 +98,6 @@ class PiClock(AppBase):
 
       # Make a new API call if the call timer is greater than 30 minutes
       if (d_naive - self.callTimer).total_seconds() >= 1800:
-        print('another API call!')
         self.getData()
 
       # Set current time & ante/post meridiem (AM/PM)
@@ -131,17 +133,26 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 6, timeColor, currentDay)
       graphics.DrawText(offscreen_canvas, smallFont, x_pos, y_pos + 13, timeColor, currentDate)
 
-      # Draw current weather icon
-      self.sunny_icon.thumbnail((15, 18))
-      offscreen_canvas.SetImage(self.sunny_icon.convert('RGB'), 1, 29)
+      # Draw current weather text & icon as well as current temperature
+      self.weather_icon.thumbnail((15, 18))
+      offscreen_canvas.SetImage(self.weather_icon.convert('RGB'), 1, 29)
+      graphics.DrawText(offscreen_canvas, smallFont, current_weather_pos, y_pos + 28, timeColor, currentWeather)
+      graphics.DrawText(offscreen_canvas, medFont, current_weather_pos, y_pos + 22, timeColor, currentTemp)
+      
+      # Draw degree symbol
+      for pixel_x in range(1,4):
+        for pixel_y in range(1,4):
+          if (pixel_x == 2 or pixel_y == 2) and pixel_x != pixel_y:
+            offscreen_canvas.SetPixel(pixel_x + degree_pos, pixel_y + 28, 255, 255, 255)
+            
+      # Draw rain chance icon
+      offscreen_canvas.SetImage(rain_icon.convert('RGB'), 50, 29)
 
-      graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
-      graphics.DrawText(offscreen_canvas, smallFont, x_pos + 6, bottom_bar_y, timeColor, "79")
-      graphics.DrawText(offscreen_canvas, smallFont, x_pos + 15, bottom_bar_y, loColor, "LO")
-      graphics.DrawText(offscreen_canvas, smallFont, x_pos + 23, bottom_bar_y, timeColor, "59")
-
-      # Display weather data
-      #graphics.DrawText(offscreen_canvas, medFont, x_pos, y_pos + 35, timeColor, currentTime)
+      # Draw bottom info bar
+      # graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
+      # graphics.DrawText(offscreen_canvas, smallFont, x_pos + 6, bottom_bar_y, timeColor, "79")
+      # DrawText(offscreen_canvas, smallFont, x_pos + 15, bottom_bar_y, loColor, "LO")
+      # graphics.DrawText(offscreen_canvas, smallFont, x_pos + 23, bottom_bar_y, timeColor, "59")
 
       time.sleep(0.05)
       offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
