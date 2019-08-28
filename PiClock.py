@@ -54,11 +54,17 @@ class PiClock(AppBase):
   def run(self):
     offscreen_canvas = self.matrix.CreateFrameCanvas()
 
+    # Set current temp & weather data from API call
+    currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+    currentWeather = self.weather[0]['WeatherText']
+    rainChance = self.forecast                                          # This needs to be fixed, cached bad data and unable to test
+    rainChance = "15"                                                   ## Dummy data to keep length check working below
+    
     # Load Fonts
     largeFont = graphics.Font()
     medFont = graphics.Font()
     smallFont = graphics.Font()
-
+    
     largeFont.LoadFont("./fonts/10x20.bdf")
     medFont.LoadFont("./fonts/6x12.bdf")
     smallFont.LoadFont("./fonts/4x6.bdf")
@@ -67,10 +73,6 @@ class PiClock(AppBase):
     timeColor = graphics.Color(255, 255, 255)
     hiColor = graphics.Color(255, 0, 0)
     loColor = graphics.Color(0, 0, 255)
-
-    # Set current temp & weather data from API call
-    currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
-    currentWeather = self.weather[0]['WeatherText']
     
     # Set text positions
     x_pos = 2
@@ -79,11 +81,28 @@ class PiClock(AppBase):
     time_x_pos = 2
     current_weather_pos = x_pos + 16
     degree_pos = 23
+    rain_pos = 48
+    percent_pos = 54
+    large_num_offset = 0
     
+    # Perform some checks to prevent text overflow
     if len(currentTemp) == 2:
       degree_pos += 6
     elif len(currentTemp) > 2:
       degree_pos += 12
+      
+    if len(rainChance) == 2:
+      rain_pos -= 6
+    elif len(rainChance) > 2:
+      rain_pos -= 12
+      
+    if len(rainChance + currentTemp) > 5:
+      midRowFont = smallFont
+      rain_pos += 6
+      degree_pos -= 6
+      large_num_offset += 1
+    else: 
+      midRowFont = medFont
     
     # Load rain chance icon
     rain_icon = Image.open('./images/drop.png')
@@ -138,16 +157,18 @@ class PiClock(AppBase):
       self.weather_icon.thumbnail((15, 18))
       offscreen_canvas.SetImage(self.weather_icon.convert('RGB'), 1, 29)
       graphics.DrawText(offscreen_canvas, smallFont, current_weather_pos, y_pos + 28, timeColor, currentWeather)
-      graphics.DrawText(offscreen_canvas, medFont, current_weather_pos, y_pos + 22, timeColor, currentTemp)
+      graphics.DrawText(offscreen_canvas, midRowFont, current_weather_pos, y_pos + 22, timeColor, currentTemp)
       
       # Draw degree symbol
       for pixel_x in range(1,4):
         for pixel_y in range(1,4):
           if (pixel_x == 2 or pixel_y == 2) and pixel_x != pixel_y:
-            offscreen_canvas.SetPixel(pixel_x + degree_pos, pixel_y + 28, 255, 255, 255)
+            offscreen_canvas.SetPixel(pixel_x + degree_pos, pixel_y + 28 + (large_num_offset * 2), 255, 255, 255)
             
-      # Draw rain chance icon
+      # Draw rain chance icon & percentage
       offscreen_canvas.SetImage(rain_icon.convert('RGB'), 58, 29)
+      graphics.DrawText(offscreen_canvas, midRowFont, rain_pos, y_pos + 22, timeColor, rainChance)
+      graphics.DrawText(offscreen_canvas, smallFont, percent_pos, y_pos + 21 + large_num_offset, timeColor, "%")
 
       # Draw bottom info bar
       # graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
