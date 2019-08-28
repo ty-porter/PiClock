@@ -8,7 +8,7 @@ from PIL import Image
 from apikey import apikey
 from location import locationCode
 import pytz
-from dummy import parseDummyData
+from dummy import Dummy
 
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
@@ -27,13 +27,14 @@ class PiClock(AppBase):
     # self.weather = weatherRequest.json()
     ######################################
 
-    dummyData = parseDummyData() ## Dummy data
-    self.weather = dummyData     ## Dummy data
+    dummy = Dummy()
+    self.weather = dummy.jsonData    ## Dummy data
+    print(self.weather)
 
     self.selectCurrentWeatherIcon()
 
   def selectCurrentWeatherIcon(self):
-    weatherIconNum = int( self.weather['WeatherIcon'] )
+    weatherIconNum = int( self.weather[0]['WeatherIcon'] )
     
     def weatherIconFile(num):
       if num < 3 or num == 33 or num == 34:

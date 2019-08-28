@@ -14,14 +14,25 @@ from location import locationCode
 # You can use this tool to generate real data for testing purposes. Simply run
 # sudo ./dummy.py to generate new data to the dummydata.txt file.
 
-URL = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
-data = requests.get(URL).json()
+class Dummy:
+	
+	def __init__(self):
+		self.jsonData = {}
+		self.getData()
+		self.parseData()
+	
+	def getData(self):
+		url = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
+		data = requests.get(url).json()
 
-with open('dummydata.json', 'w') as f:
-	json.dump(data, f)
+		if 'Message' not in data:
+			print('Generating new AccuWeather dummy data...')
+			with open('dummydata.json', 'w') as f:
+				json.dump(data, f)
+		else:
+			print('Maxed out API calls to AccuWeather. Attempting to use cached data...')	
 
-def parseDummyData():
-	with open('dummydata.json', 'r') as f:
-		jsonData = json.load(f)
-	return jsonData
-
+	def parseData(self):
+		with open('dummydata.json', 'r') as f:
+			jsonData = json.load(f)
+		self.jsonData = jsonData
