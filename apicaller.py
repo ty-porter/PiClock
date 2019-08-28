@@ -17,25 +17,42 @@ from location import locationCode
 class ApiCaller:
 	
 	def __init__(self):
-		self.jsonData = {}
+		self.currentWeather = {}
+		self.forecast = {}
 		self.getData()
 		self.parseData()
 	
 	def getData(self):
 		url = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
-		data = requests.get(url).json()
+		currentWeatherRequest = requests.get(url).json()
 
-		if 'Message' not in data:
-			print('Generating new AccuWeather data...')
-			with open('data.json', 'w') as f:
-				json.dump(data, f)
+		if 'Message' not in currentWeatherRequest:
+			print('Generating current weather data from AccuWeather...')
+			with open('currentweather.json', 'w') as f:
+				json.dump(currentWeatherRequest, f)
 		else:
-			print('Maxed out API calls to AccuWeather. Attempting to use cached data...')	
+			print('Maxed out API calls to AccuWeather. Attempting to use cached current weather data...')
+			
+		url = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
+		forecastRequest = requests.get(url).json()
+
+		if 'Message' not in forecastRequest:
+			print('Generating forecast data from AccuWeather...')
+			with open('forecast.json', 'w') as f:
+				json.dump(forecastRequest, f)
+		else:
+			print('Maxed out API calls to AccuWeather. Attempting to use cached forecast data...')		
 
 	def parseData(self):
 		with open('data.json', 'r') as f:
-			jsonData = json.load(f)
-		self.jsonData = jsonData
+			currentWeather = json.load(f)
+			
+		with open('forecast.json', 'r') as f:
+			forecast = json.load(f)
+				
+		self.currentWeather = currentWeather
+		self.forecast = forecast
+		
 	
 	def getLocation(self, zipcode):
 		url = 'http://dataservice.accuweather.com/locations/v1/postalcodes/search?apikey=' + apikey + '&q=' + str(zipcode)

@@ -21,7 +21,8 @@ class PiClock(AppBase):
 
     # Calls API, or reverts to using cached data if too many calls have been made
     caller = ApiCaller()      
-    self.weather = caller.jsonData   
+    self.weather = caller.currentWeather
+    self.forecast = caller.forecast  
 
     self.selectCurrentWeatherIcon()
 
@@ -96,8 +97,8 @@ class PiClock(AppBase):
       timezone = pytz.timezone("America/Chicago")
       d_aware = timezone.localize(d_naive)
 
-      # Make a new API call if the call timer is greater than 30 minutes
-      if (d_naive - self.callTimer).total_seconds() >= 1800:
+      # Make a new API call if the call timer is greater than 1 hour
+      if (d_naive - self.callTimer).total_seconds() >= 3600:
         self.getData()
 
       # Set current time & ante/post meridiem (AM/PM)
@@ -146,7 +147,7 @@ class PiClock(AppBase):
             offscreen_canvas.SetPixel(pixel_x + degree_pos, pixel_y + 28, 255, 255, 255)
             
       # Draw rain chance icon
-      offscreen_canvas.SetImage(rain_icon.convert('RGB'), 50, 29)
+      offscreen_canvas.SetImage(rain_icon.convert('RGB'), 58, 29)
 
       # Draw bottom info bar
       # graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
