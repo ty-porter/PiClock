@@ -20,7 +20,8 @@ class PiClock(AppBase):
     self.callTimer = datetime.datetime.now()
 
     # Calls API, or reverts to using cached data if too many calls have been made
-    caller = ApiCaller()      
+    caller = ApiCaller()
+    caller.getAndParse()
     self.weather = caller.currentWeather
     self.forecast = caller.forecast  
 
@@ -57,8 +58,8 @@ class PiClock(AppBase):
     # Set current temp & weather data from API call
     currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
     currentWeather = self.weather[0]['WeatherText']
-    rainChance = self.forecast                                          # This needs to be fixed, cached bad data and unable to test
-    rainChance = "15"                                                   ## Dummy data to keep length check working below
+    rainChance = self.forecast
+    rainChance = '15'
     
     # Load Fonts
     largeFont = graphics.Font()

@@ -9,6 +9,8 @@ class ApiCaller:
 	def __init__(self):
 		self.currentWeather = {}
 		self.forecast = {}
+		
+	def getAndParse(self):
 		self.getData()
 		self.parseData()
 	
@@ -23,7 +25,7 @@ class ApiCaller:
 		else:
 			print('Maxed out API calls to AccuWeather. Attempting to use cached current weather data...')
 			
-		url = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
+		url = 'http://dataservice.accuweather.com/forecasts/v1/daily/1day/' + locationCode + '?apikey=' + apikey + "&details=true"
 		forecastRequest = requests.get(url).json()
 
 		if 'Message' not in forecastRequest:
@@ -47,9 +49,9 @@ class ApiCaller:
 	def getLocation(self, zipcode):
 		url = 'http://dataservice.accuweather.com/locations/v1/postalcodes/search?apikey=' + apikey + '&q=' + str(zipcode)
 		locationRequest = requests.get(url).json()
-		newLocationCode = locationRequest[0]['Key']
 		
-		if 'Message' not in data:
+		if 'Message' not in locationRequest:
+			newLocationCode = locationRequest[0]['Key']
 			print('Generating new AccuWeather location code...')
 			with open('location.py', 'w') as f:
 				f.write('locationCode = "' + newLocationCode + '"')
