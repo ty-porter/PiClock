@@ -58,8 +58,12 @@ class PiClock(AppBase):
     # Set current temp & weather data from API call
     currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
     currentWeather = self.weather[0]['WeatherText']
-    rainChance = self.forecast
-    rainChance = '15'
+    
+    isDayTime = self.weather[0]['IsDayTime']
+    dayOrNight = 'Day' if isDayTime else 'Night'
+        
+    rainChance = self.forecast['DailyForecasts'][0][dayOrNight]['PrecipitationProbability']
+    rainChance = str(rainChance)
     
     # Load Fonts
     largeFont = graphics.Font()
