@@ -13,21 +13,24 @@ from apicaller import ApiCaller
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
     super(PiClock, self).__init__(*args, **kwargs)
+    
+    # Instantiate an API caller object, then use it to seed initial data
+    self.caller = ApiCaller()
     self.getData()
 
   def getData(self):
     # Set an initial API call datetime object to prevent multiple API calls
     self.callTimer = datetime.datetime.now()
-
+    
     # Calls API, or reverts to using cached data if too many calls have been made
-    caller = ApiCaller()
-    caller.getAndParse()
-    self.weather = caller.currentWeather
-    self.forecast = caller.forecast  
+    self.caller.getAndParse()
+    self.weather = self.caller.currentWeather
+    self.forecast = self.caller.forecast  
 
     self.selectCurrentWeatherIcon()
 
   def selectCurrentWeatherIcon(self):
+    # Sets the weather icon based on weather data
     weatherIconNum = int( self.weather[0]['WeatherIcon'] )
     
     def weatherIconFile(num):
@@ -114,7 +117,7 @@ class PiClock(AppBase):
 
     while True: 
 
-      # Clock functions
+      ### Clock functions
 
       # Create datetime object and localize it
       d_naive = datetime.datetime.now()
@@ -175,7 +178,10 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, midRowFont, rain_pos, y_pos + 22, timeColor, rainChance)
       graphics.DrawText(offscreen_canvas, smallFont, percent_pos, y_pos + 21 + large_num_offset, timeColor, "%")
 
-      # Draw bottom info bar
+      # Draw bottom info bar 
+      
+      # CURRENTLY NOT IMPLEMENTED!
+      
       # graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
       # graphics.DrawText(offscreen_canvas, smallFont, x_pos + 6, bottom_bar_y, timeColor, "79")
       # DrawText(offscreen_canvas, smallFont, x_pos + 15, bottom_bar_y, loColor, "LO")

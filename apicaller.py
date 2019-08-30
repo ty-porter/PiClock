@@ -21,7 +21,10 @@ class ApiCaller:
 		if 'Message' not in currentWeatherRequest:
 			print('Generating current weather data from AccuWeather...')
 			with open('currentweather.json', 'w') as f:
-				json.dump(currentWeatherRequest, f)
+				try:
+					json.dump(currentWeatherRequest, f)
+				finally:
+					f.close()
 		else:
 			print('Maxed out API calls to AccuWeather. Attempting to use cached current weather data...')
 			
@@ -30,17 +33,26 @@ class ApiCaller:
 
 		if 'Message' not in forecastRequest:
 			print('Generating forecast data from AccuWeather...')
-			with open('forecast.json', 'w') as g:
-				json.dump(forecastRequest, g)
+			with open('forecast.json', 'w') as f:
+				try:
+					json.dump(forecastRequest, f)
+				finally:
+					f.close()
 		else:
 			print('Maxed out API calls to AccuWeather. Attempting to use cached forecast data...')		
 
 	def parseData(self):
 		with open('currentweather.json', 'r') as f:
-			currentWeather = json.load(f)
+			try:
+				currentWeather = json.load(f)
+			finally:
+				f.close()
 			
-		with open('forecast.json', 'r') as g:
-			forecast = json.load(g)
+		with open('forecast.json', 'r') as f:
+			try:
+				forecast = json.load(f)
+			finally:
+				f.close()
 				
 		self.currentWeather = currentWeather
 		self.forecast = forecast
@@ -54,7 +66,10 @@ class ApiCaller:
 			newLocationCode = locationRequest[0]['Key']
 			print('Generating new AccuWeather location code...')
 			with open('location.py', 'w') as f:
-				f.write('locationCode = "' + newLocationCode + '"')
+				try:
+					f.write('locationCode = "' + newLocationCode + '"')
+				finally:
+					f.close()
 		else:
 			print('Maxed out API calls to AccuWeather. Please try again later...')
 			
