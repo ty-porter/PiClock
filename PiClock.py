@@ -16,7 +16,9 @@ class PiClock(AppBase):
     
     # Instantiate an API caller object, then use it to seed initial data
     self.caller = ApiCaller()
-    self.getData()
+    self.clockVars = {}
+    self.getData()    
+    self.updateClockVars = True
 
   def getData(self):
     # Set an initial API call datetime object to prevent multiple API calls
@@ -28,6 +30,7 @@ class PiClock(AppBase):
     self.forecast = self.caller.forecast  
 
     self.selectCurrentWeatherIcon()
+    self.defineClockVars()
 
   def selectCurrentWeatherIcon(self):
     # Sets the weather icon based on weather data
@@ -54,10 +57,9 @@ class PiClock(AppBase):
         return "unknown"
 
     self.weather_icon = Image.open('./images/' + weatherIconFile(weatherIconNum) +'.png')
-
-  def run(self):
-    offscreen_canvas = self.matrix.CreateFrameCanvas()
-
+    
+  def defineClockVars(self):
+  
     # Set current temp & weather data from API call
     currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
     currentWeather = self.weather[0]['WeatherText']
@@ -72,7 +74,7 @@ class PiClock(AppBase):
     largeFont = graphics.Font()
     medFont = graphics.Font()
     smallFont = graphics.Font()
-    
+
     largeFont.LoadFont("./fonts/10x20.bdf")
     medFont.LoadFont("./fonts/6x12.bdf")
     smallFont.LoadFont("./fonts/4x6.bdf")
@@ -81,7 +83,7 @@ class PiClock(AppBase):
     timeColor = graphics.Color(255, 255, 255)
     hiColor = graphics.Color(255, 0, 0)
     loColor = graphics.Color(0, 0, 255)
-    
+
     # Set text positions
     x_pos = 2
     y_pos = 14
@@ -92,18 +94,18 @@ class PiClock(AppBase):
     rain_pos = 48
     percent_pos = 54
     large_num_offset = 0
-    
+
     # Perform some checks to prevent text overflow
     if len(currentTemp) == 2:
       degree_pos += 6
     elif len(currentTemp) > 2:
       degree_pos += 12
-      
+
     if len(rainChance) == 2:
       rain_pos -= 6
     elif len(rainChance) > 2:
       rain_pos -= 12
-      
+
     if len(rainChance + currentTemp) > 5:
       midRowFont = smallFont
       rain_pos += 6
@@ -111,11 +113,69 @@ class PiClock(AppBase):
       large_num_offset += 1
     else: 
       midRowFont = medFont
-    
+
     # Load rain chance icon
     rain_icon = Image.open('./images/drop.png')
+    
+    self.clockVars = {
+        'currentWeather': currentWeather,
+        'currentTemp': currentTemp,
+        'rainChance': rainChance,
+        'largeFont': largeFont,
+        'medFont': medFont,
+        'smallFont': smallFont,
+        'timeColor': timeColor,
+        'hiColor': hiColor,
+        'loColor': loColor,
+        'x_pos': x_pos,
+        'y_pos': y_pos,
+        'bottom_bar_y': bottom_bar_y,
+        'current_weather_pos': current_weather_pos,
+        'degree_pos': degree_pos,
+        'rain_pos': rain_pos,
+        'percent_pos': percent_pos,
+        'large_num_offset': large_num_offset,
+        'midRowFont': midRowFont,
+        'rain_icon': rain_icon,
+        'time_x_pos': time_x_pos
+    }
+    
+    # Set the flag to have clock update the clockVars within run() function
+    self.updateClockVars = True
+    
+  def run(self):
+    offscreen_canvas = self.matrix.CreateFrameCanvas()
 
+    ### Begin running clock functions
     while True: 
+      
+      # Check flag to determine whether to update clockVars
+      # Prevents this from happening on every clock cycle.
+      if self.updateClockVars:
+        
+        # Reset the flag
+        self.updateClockVars = False
+        
+        currentWeather = self.clockVars['currentWeather']
+        currentTemp = self.clockVars['currentTemp']
+        rainChance = self.clockVars['rainChance']
+        largeFont = self.clockVars['largeFont']
+        medFont = self.clockVars['medFont']
+        smallFont = self.clockVars['smallFont']
+        timeColor = self.clockVars['timeColor']
+        hiColor = self.clockVars['hiColor']
+        loColor = self.clockVars['loColor']
+        x_pos = self.clockVars['x_pos']
+        y_pos = self.clockVars['y_pos']
+        bottom_bar_y = self.clockVars['bottom_bar_y']
+        current_weather_pos = self.clockVars['current_weather_pos']
+        degree_pos = self.clockVars['degree_pos']
+        rain_pos = self.clockVars['rain_pos']
+        percent_pos = self.clockVars['percent_pos']
+        large_num_offset = self.clockVars['large_num_offset']
+        midRowFont = self.clockVars['midRowFont']
+        rain_icon = self.clockVars['rain_icon']
+        time_x_pos = self.clockVars['time_x_pos']
 
       ### Clock functions
 
@@ -141,6 +201,8 @@ class PiClock(AppBase):
       # If single digit hour, adjust time position
       if len(currentHour) == 1:
         time_x_pos = 12
+      elif len(currentHour) == 2:
+        time_x_pos = 2
 
       # Build the clock value
       currentTime = currentHour + blink + currentMinute
