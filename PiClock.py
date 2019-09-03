@@ -57,7 +57,10 @@ class PiClock(AppBase):
         return "unknown"
 
     self.weather_icon = Image.open('./images/' + weatherIconFile(weatherIconNum) +'.png')
+<<<<<<< HEAD
     
+=======
+>>>>>>> 3f4bb466eb4273fcf075f167b10e75050e33b8d5
   def defineClockVars(self):
   
     # Set current temp & weather data from API call
