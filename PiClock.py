@@ -57,15 +57,12 @@ class PiClock(AppBase):
         return "unknown"
 
     self.weather_icon = Image.open('./images/' + weatherIconFile(weatherIconNum) +'.png')
-<<<<<<< HEAD
     
-=======
->>>>>>> 3f4bb466eb4273fcf075f167b10e75050e33b8d5
   def defineClockVars(self):
   
     # Set current temp & weather data from API call
     currentTemp = str( int(self.weather[0]['Temperature']['Imperial']['Value']) )
-    currentWeather = self.weather[0]['WeatherText']
+    currentWeather = self.weather[0]['WeatherText'].split(' ')
     
     isDayTime = self.weather[0]['IsDayTime']
     dayOrNight = 'Day' if isDayTime else 'Night'
@@ -148,6 +145,15 @@ class PiClock(AppBase):
     
   def run(self):
     offscreen_canvas = self.matrix.CreateFrameCanvas()
+    
+    # Set an inital index for weather text arrays
+    # For multi-line weather text statuses
+    # updateWeatherTextIndex determines whether clock should advance text index
+    weatherTextIndex = -1
+    updateWeatherTextIndex = False
+    
+    # currentSecond is used to determine whether to update weather text index
+    currentSecond = 0
 
     ### Begin running clock functions
     while True: 
@@ -206,6 +212,22 @@ class PiClock(AppBase):
         time_x_pos = 12
       elif len(currentHour) == 2:
         time_x_pos = 2
+        
+      # Update weather text index only 1x per second
+      if int( d_aware.strftime('%S') ) != currentSecond:
+        updateWeatherTextIndex = True
+        currentSecond = int( d_aware.strftime('%S') )
+        
+      # Advance weather text index if multi-line weather status
+      if len(currentWeather) > 1:
+        if updateWeatherTextIndex:
+          weatherTextIndex += 1
+          updateWeatherTextIndex = False
+        
+        if weatherTextIndex == len(currentWeather):
+          weatherTextIndex = 0
+      else:
+        weatherTextIndex = 0
 
       # Build the clock value
       currentTime = currentHour + blink + currentMinute
@@ -229,7 +251,7 @@ class PiClock(AppBase):
       # Draw current weather text & icon as well as current temperature
       self.weather_icon.thumbnail((15, 18))
       offscreen_canvas.SetImage(self.weather_icon.convert('RGB'), 1, 29)
-      graphics.DrawText(offscreen_canvas, smallFont, current_weather_pos, y_pos + 28, timeColor, currentWeather)
+      graphics.DrawText(offscreen_canvas, smallFont, current_weather_pos, y_pos + 28, timeColor, currentWeather[weatherTextIndex])
       graphics.DrawText(offscreen_canvas, midRowFont, current_weather_pos, y_pos + 22, timeColor, currentTemp)
       
       # Draw degree symbol
