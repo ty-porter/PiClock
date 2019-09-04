@@ -1,4 +1,4 @@
-# PiClock ![Version](https://img.shields.io/badge/Version-1.0.0-green) ![Python](https://img.shields.io/badge/Python-v2.7-blue) ![RPI](https://img.shields.io/badge/Raspberry-Pi-red) ![Active](https://img.shields.io/badge/Active-Yes-brightgreen)
+# PiClock ![Version](https://img.shields.io/badge/Version-1.0.1-green) ![Python](https://img.shields.io/badge/Python-v2.7-blue) ![RPI](https://img.shields.io/badge/Raspberry-Pi-red) ![Active](https://img.shields.io/badge/Active-Yes-brightgreen)
 
 PiClock is a desk clock firmware built for Raspberry Pi 3-compatible LED displays. It pulls data from the AccuWeather API once per hour and details current weather as well as rain forecast for your area. PiClock comes with a utility tool to look up your current area by zip code to generate a compatible location key to be used by the AccuWeather API.
 
@@ -65,6 +65,14 @@ From there, you will need to create an app to generate an API key.
 **Step 4.** Fork Repo and Run!
 
 Fork the repo, navigate to the project folder, and open the `apikey.py` file. Inside this file, replace the dummy text with your API key you generated from AccuWeather, and save it.
+
+Next, you'll need to generate your location code (this is different than your zip code). There is an included `utility.py` file in the project directory. You can run that with
+
+```
+sudo ./utility.py
+```
+
+and follow the prompts in order to poll the API and fetch the code. Once it's saved, you won't need to run this again (unless you want to get data from a different location).
 
 Once that's all done, you're ready to go! Simply open up a terminal and navigate to the project directory, then run
 
