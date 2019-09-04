@@ -3,6 +3,8 @@ import json
 import requests
 from apikey import apikey
 from location import locationCode
+import datetime
+import pytz
 
 class ApiCaller:
 	
@@ -15,31 +17,39 @@ class ApiCaller:
 		self.parseData()
 	
 	def getData(self):
+		# Create datetime object and localize it 
+		d_naive = datetime.datetime.now()
+		timezone = pytz.timezone("America/Chicago")
+		d_aware = timezone.localize(d_naive)
+		
+		# Create a localized timestamp from datetime object
+		timestamp = d_aware.strftime('%m/%d/%y %H:%M:%S : ')
+    
 		url = 'http://dataservice.accuweather.com/currentconditions/v1/' + locationCode + '?apikey=' + apikey + "&details=true"
 		currentWeatherRequest = requests.get(url).json()
 
 		if 'Message' not in currentWeatherRequest:
-			print('Generating current weather data from AccuWeather...')
+			print(timestamp + 'Generating current weather data from AccuWeather...')
 			with open('currentweather.json', 'w') as f:
 				try:
 					json.dump(currentWeatherRequest, f)
 				finally:
 					f.close()
 		else:
-			print('Maxed out API calls to AccuWeather. Attempting to use cached current weather data...')
+			print(timestamp + 'Maxed out API calls to AccuWeather. Attempting to use cached current weather data...')
 			
 		url = 'http://dataservice.accuweather.com/forecasts/v1/daily/1day/' + locationCode + '?apikey=' + apikey + "&details=true"
 		forecastRequest = requests.get(url).json()
 
 		if 'Message' not in forecastRequest:
-			print('Generating forecast data from AccuWeather...')
+			print(timestamp + 'Generating forecast data from AccuWeather...')
 			with open('forecast.json', 'w') as f:
 				try:
 					json.dump(forecastRequest, f)
 				finally:
 					f.close()
 		else:
-			print('Maxed out API calls to AccuWeather. Attempting to use cached forecast data...')		
+			print(timestamp + 'Maxed out API calls to AccuWeather. Attempting to use cached forecast data...')		
 
 	def parseData(self):
 		with open('currentweather.json', 'r') as f:
@@ -64,12 +74,12 @@ class ApiCaller:
 		
 		if 'Message' not in locationRequest:
 			newLocationCode = locationRequest[0]['Key']
-			print('Generating new AccuWeather location code...')
+			print(timestamp + 'Generating new AccuWeather location code...')
 			with open('location.py', 'w') as f:
 				try:
 					f.write('locationCode = "' + newLocationCode + '"')
 				finally:
 					f.close()
 		else:
-			print('Maxed out API calls to AccuWeather. Please try again later...')
+			print(timestamp + 'Maxed out API calls to AccuWeather. Please try again later...')
 			
