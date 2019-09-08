@@ -77,10 +77,30 @@ and follow the prompts in order to poll the API and fetch the code. Once it's sa
 Once that's all done, you're ready to go! Simply open up a terminal and navigate to the project directory, then run
 
 ```
-sudo ./PiClock.py --led-rows=64 --led-cols=64
+sudo ./PiClock.py
 ```
 
 to run PiClock on a 64x64 display.
+
+### Command Line Arguments:
+| Argument | Description |
+| --- | --- |
+| -r, --led-rows |  Display rows. 16 for 16x32, 32 for 32x32. Default: 64 | 
+| --led-cols |  Panel columns. Typically 32 or 64. Default: 64 | 
+| -c, --led-chain |  Daisy-chained boards. Default: 1 | 
+| -P, --led-parallel |  For Plus-models or RPi2: parallel chains. 1..3. Default: 1 | 
+| -p, --led-pwm-bits |  Bits used for PWM. Something between 1..11. Default: 11 | 
+| -b, --led-brightness |  Sets brightness level. Default: 100. Range: 1..100 | 
+| -m, --led-gpio-mapping |  Hardware Mapping: regular, adafruit-hat, adafruit-hat-pwm | 
+| --led-scan-mode | Progressive or interlaced scan. 0 Progressive, 1 Interlaced (default) | 
+| --led-pwm-lsb-nanosecondsBase | time-unit for the on-time in the lowest significant bit in nanoseconds. Default: 130 | 
+| --led-show-refresh |  Shows the current refresh rate of the LED panel | 
+| --led-slowdown-gpio |  Slow down writing to GPIO. Range: 1..100. Default: 1 | 
+| --led-no-hardware-pulse | Don't use hardware pin-pulse generation | 
+| --led-rgb-sequence |  Switch if your matrix has led colors swapped. Default: RGB | 
+| --led-pixel-mapper |  Apply pixel mappers. e.g \Rotate:90\ | 
+| --led-row-addr-type |  0 = default; 1=AB-addressed panels;2=row direct | 
+| --led-multiplexing |  Multiplexing type: 0=direct; 1=strip; 2=checker; 3=spiral; 4=ZStripe; 5=ZnMirrorZStripe; 6=coreman; 7=Kaler2Scan; 8=ZStripeUneven (Default: 0) |
 
 ## Contributing
 ### 1.0.0 and onwards
