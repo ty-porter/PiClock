@@ -9,6 +9,22 @@ from apikey import apikey
 from location import locationCode
 import pytz
 from apicaller import ApiCaller
+from apds9960.const import *
+from apds9960 import APDS9960
+import RPi.GPIO as GPIO
+import smbus
+
+# Disable GPIO warnings (can cause warnings if attempting to use the 
+# Adafruit RGB Matrix HAT + RTC as they both use address 0x89)
+GPIO.setwarnings(False)
+
+# Setup proximity sensor
+port = 1
+bus = smbus.SMBus(port)
+apds = APDS9960(bus)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(7, GPIO.IN)
+GPIO.add_event_detect(7, GPIO.FALLING)
 
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
@@ -154,9 +170,22 @@ class PiClock(AppBase):
     
     # currentSecond is used to determine whether to update weather text index
     currentSecond = 0
+    
+    # Set prox sensor configuration and seed initial value
+    apds.setProximityIntLowThreshold(50)
+    
+    apds.enableProximitySensor()
+    oval = -1
 
     ### Begin running clock functions
     while True: 
+      
+      # Read from the proximity sensor
+      val = apds.readProximity()
+      if val != oval:
+          if val > 100:
+            print("Motion detected!")
+          oval = val
       
       # Check flag to determine whether to update clockVars
       # Prevents this from happening on every clock cycle.
