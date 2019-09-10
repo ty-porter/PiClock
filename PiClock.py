@@ -16,15 +16,10 @@ import smbus
 
 # Disable GPIO warnings (can cause warnings if attempting to use the 
 # Adafruit RGB Matrix HAT + RTC as they both use address 0x89)
+#
+# For this reason, the ADPS9960 is not compatible with the HAT if you need
+# to use the real time clock!!
 GPIO.setwarnings(False)
-
-# Setup proximity sensor
-port = 1
-bus = smbus.SMBus(port)
-apds = APDS9960(bus)
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(7, GPIO.IN)
-GPIO.add_event_detect(7, GPIO.FALLING)
 
 class PiClock(AppBase):
   def __init__(self, *args, **kwargs):
@@ -35,6 +30,15 @@ class PiClock(AppBase):
     self.clockVars = {}
     self.getData()    
     self.updateClockVars = True
+    
+    # Setup proximity sensor, if flag enabled
+    if self.proxSensorEnabled == True:
+      port = 1
+      bus = smbus.SMBus(port)
+      self.apds = APDS9960(bus)
+      GPIO.setmode(GPIO.BOARD)
+      GPIO.setup(7, GPIO.IN)
+      GPIO.add_event_detect(7, GPIO.FALLING)
 
   def getData(self):
     # Set an initial API call datetime object to prevent multiple API calls
@@ -158,9 +162,14 @@ class PiClock(AppBase):
     
     # Set the flag to have clock update the clockVars within run() function
     self.updateClockVars = True
-    
+      
   def run(self):
+    # Create canvas  
     offscreen_canvas = self.matrix.CreateFrameCanvas()
+    
+    # Set default brightness
+    brightness = offscreen_canvas.brightness
+    brightness = 25
     
     # Set an inital index for weather text arrays
     # For multi-line weather text statuses
@@ -171,21 +180,23 @@ class PiClock(AppBase):
     # currentSecond is used to determine whether to update weather text index
     currentSecond = 0
     
-    # Set prox sensor configuration and seed initial value
-    apds.setProximityIntLowThreshold(50)
-    
-    apds.enableProximitySensor()
-    oval = -1
+    # Set prox sensor configuration and seed initial value, if enabled
+    if self.proxSensorEnabled == True:
+      self.apds.setProximityIntLowThreshold(50)
+      
+      self.apds.enableProximitySensor()
+      oval = -1
 
     ### Begin running clock functions
     while True: 
       
-      # Read from the proximity sensor
-      val = apds.readProximity()
-      if val != oval:
-          if val > 100:
-            print("Motion detected!")
-          oval = val
+      # Read from the proximity sensor, if enabled
+      if self.proxSensorEnabled == True:
+        val = self.apds.readProximity()
+        if val != oval:
+            if val > 100:
+              print("Motion detected!")
+            oval = val
       
       # Check flag to determine whether to update clockVars
       # Prevents this from happening on every clock cycle.
@@ -305,6 +316,7 @@ class PiClock(AppBase):
 
       time.sleep(0.05)
       offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
+      offscreen_canvas.brightness = brightness
 
 # Main function
 if __name__ == "__main__":
