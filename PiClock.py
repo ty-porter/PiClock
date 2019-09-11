@@ -167,9 +167,15 @@ class PiClock(AppBase):
     # Create canvas  
     offscreen_canvas = self.matrix.CreateFrameCanvas()
     
-    # Set default brightness
+    # Set default brightness variables
+    # Only used for proximity sensor
     brightness = offscreen_canvas.brightness
-    brightness = 25
+    min_brightness = 25
+    max_brightness = brightness
+    
+    # Set a timeout flag based on cycles (currently approx 15s at 120hz)
+    brightness_timeout = 150
+    change_brightness = True
     
     # Set an inital index for weather text arrays
     # For multi-line weather text statuses
@@ -191,12 +197,26 @@ class PiClock(AppBase):
     while True: 
       
       # Read from the proximity sensor, if enabled
+      # BEGIN 
       if self.proxSensorEnabled == True:
         val = self.apds.readProximity()
         if val != oval:
             if val > 100:
-              print("Motion detected!")
+              brightness = max_brightness
+              change_brightness = True
+              brightness_timeout = 150
             oval = val
+            
+        if change_brightness == True:
+          brightness_timeout -= 1
+          if brightness_timeout <= 0:
+            change_brightness = False
+            brightness_timeout = 0
+          
+        if brightness_timeout == 0:
+          if brightness >= min_brightness:
+            brightness -= 1
+      # END
       
       # Check flag to determine whether to update clockVars
       # Prevents this from happening on every clock cycle.
