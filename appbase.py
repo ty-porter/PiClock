@@ -11,6 +11,7 @@ class AppBase(object):
     def __init__(self, *args, **kwargs):
         self.parser = argparse.ArgumentParser()
 
+        self.parser.add_argument("-e", "--enable-motion-sensor", action="store_true", help="Enable motion sensor for brightness adjustment.")
         self.parser.add_argument("-r", "--led-rows", action="store", help="Display rows. 16 for 16x32, 32 for 32x32. Default: 64", default=64, type=int)
         self.parser.add_argument("--led-cols", action="store", help="Panel columns. Typically 32 or 64. (Default: 64)", default=64, type=int)
         self.parser.add_argument("-c", "--led-chain", action="store", help="Daisy-chained boards. Default: 1.", default=1, type=int)
@@ -27,6 +28,12 @@ class AppBase(object):
         self.parser.add_argument("--led-pixel-mapper", action="store", help="Apply pixel mappers. e.g \"Rotate:90\"", default="", type=str)
         self.parser.add_argument("--led-row-addr-type", action="store", help="0 = default; 1=AB-addressed panels;2=row direct", default=0, type=int, choices=[0,1,2])
         self.parser.add_argument("--led-multiplexing", action="store", help="Multiplexing type: 0=direct; 1=strip; 2=checker; 3=spiral; 4=ZStripe; 5=ZnMirrorZStripe; 6=coreman; 7=Kaler2Scan; 8=ZStripeUneven (Default: 0)", default=0, type=int)
+        
+        self.args = self.parser.parse_args()
+        if self.args.enable_motion_sensor == None:
+          self.proxSensorEnabled = False
+        else:
+          self.proxSensorEnabled = self.args.enable_motion_sensor
 
     def usleep(self, value):
         time.sleep(value / 1000000.0)
@@ -35,10 +42,8 @@ class AppBase(object):
         print("Running")
 
     def process(self):
-        self.args = self.parser.parse_args()
-
         options = RGBMatrixOptions()
-
+          
         if self.args.led_gpio_mapping != None:
           options.hardware_mapping = self.args.led_gpio_mapping
         options.rows = self.args.led_rows
@@ -56,7 +61,7 @@ class AppBase(object):
           options.show_refresh_rate = 1
 
         if self.args.led_slowdown_gpio != None:
-            options.gpio_slowdown = self.args.led_slowdown_gpio
+          options.gpio_slowdown = self.args.led_slowdown_gpio
         if self.args.led_no_hardware_pulse:
           options.disable_hardware_pulsing = True
 
