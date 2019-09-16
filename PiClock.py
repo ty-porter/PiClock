@@ -52,6 +52,7 @@ class PiClock(AppBase):
     
     # Update 24 hour temp history
     self.tempHistory.append( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+    print(self.tempHistory)
     
     if len( self.tempHistory ) > 24:
         self.tempHistory.pop(0) 
