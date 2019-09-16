@@ -28,6 +28,7 @@ class PiClock(AppBase):
     # Instantiate an API caller object, then use it to seed initial data
     self.caller = ApiCaller()
     self.clockVars = {}
+    self.tempHistory = [0] * 24
     self.getData()    
     self.updateClockVars = True
     
@@ -47,7 +48,13 @@ class PiClock(AppBase):
     # Calls API, or reverts to using cached data if too many calls have been made
     self.caller.getAndParse()
     self.weather = self.caller.currentWeather
-    self.forecast = self.caller.forecast  
+    self.forecast = self.caller.forecast 
+    
+    # Update 24 hour temp history
+    self.tempHistory.append( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+    
+    if len( self.tempHistory ) > 24:
+        self.tempHistory.pop(0) 
 
     self.selectCurrentWeatherIcon()
     self.defineClockVars()
@@ -325,14 +332,39 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, midRowFont, rain_pos, y_pos + 22, timeColor, rainChance)
       graphics.DrawText(offscreen_canvas, smallFont, percent_pos, y_pos + 21 + large_num_offset, timeColor, "%")
 
-      # Draw bottom info bar 
+      # Draw bottom temp graph
+      maxTemp = max(self.tempHistory)
+      minTemp = min(self.tempHistory)
       
-      # CURRENTLY NOT IMPLEMENTED!
-      
-      # graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
-      # graphics.DrawText(offscreen_canvas, smallFont, x_pos + 6, bottom_bar_y, timeColor, "79")
-      # DrawText(offscreen_canvas, smallFont, x_pos + 15, bottom_bar_y, loColor, "LO")
-      # graphics.DrawText(offscreen_canvas, smallFont, x_pos + 23, bottom_bar_y, timeColor, "59")
+      for pt in range(0, len(self.tempHistory)): 
+        if maxTemp == minTemp:
+          scaledTemp = 0.5
+        else:
+          scaledTemp = (self.tempHistory[pt] - minTemp) / (maxTemp - minTemp)
+        
+        point_pos = int( 57 - scaledTemp * 13 )
+        
+        offscreen_canvas.SetPixel(8 + (2 * pt), point_pos, 0,255,150)
+        
+        for y in range(0, 57 - point_pos):
+          offscreen_canvas.SetPixel(8 + (2 * pt), point_pos + y, 0,255,150)
+          
+        if pt == len(self.tempHistory) - 1:
+          offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos, 0,255,150)
+          for y in range(0, 57 - point_pos):
+            offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos + y, 0,255,150)
+        else:
+          if maxTemp == minTemp:
+            nextScaledTemp = 0.5
+          else:
+            nextScaledTemp = (self.tempHistory[pt + 1] - minTemp) / (maxTemp - minTemp)
+            
+          avgScaledTemp = float(scaledTemp + nextScaledTemp) / 2
+          point_pos = int( 57 - avgScaledTemp * 13 )
+          
+          offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos, 0,255,150)
+          for y in range(0, 57 - point_pos):
+            offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos + y, 0,255,150)
 
       time.sleep(0.05)
       offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
