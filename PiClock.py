@@ -109,8 +109,8 @@ class PiClock(AppBase):
 
     # Set colors
     timeColor = graphics.Color(255, 255, 255)
-    hiColor = graphics.Color(255, 0, 0)
-    loColor = graphics.Color(0, 0, 255)
+    hiColor = graphics.Color(175, 100, 0)
+    loColor = graphics.Color(0, 100, 175)
 
     # Set text positions
     x_pos = 2
@@ -345,6 +345,9 @@ class PiClock(AppBase):
           nonNullTempHistory.append(temp)
           if temp < minTemp:
             minTemp = temp
+            
+      graphics.DrawText(offscreen_canvas, smallFont, 1, 64, loColor, "Min:" + str(minTemp))
+      graphics.DrawText(offscreen_canvas, smallFont, 64 - ( len("Max:" + str(maxTemp)) * 4), 64, hiColor, "Max:" + str(maxTemp))
             
       if self.tempHistory.count(None) == 23:
         minTemp = 0
