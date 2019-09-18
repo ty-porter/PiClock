@@ -1,4 +1,4 @@
-# PiClock ![Version](https://img.shields.io/badge/Version-1.1.0-green) ![Python](https://img.shields.io/badge/Python-v2.7-blue) ![RPI](https://img.shields.io/badge/Raspberry-Pi-red) ![Active](https://img.shields.io/badge/Active-Yes-brightgreen)
+# PiClock ![Version](https://img.shields.io/badge/Version-1.2.0-green) ![Python](https://img.shields.io/badge/Python-v2.7-blue) ![RPI](https://img.shields.io/badge/Raspberry-Pi-red) ![Active](https://img.shields.io/badge/Active-Yes-brightgreen)
 
 PiClock is a desk clock firmware built for Raspberry Pi 3-compatible LED displays. It pulls data from the AccuWeather API once per hour and details current weather as well as rain forecast for your area. PiClock comes with a utility tool to look up your current area by zip code to generate a compatible location key to be used by the AccuWeather API.
 
