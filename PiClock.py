@@ -28,6 +28,7 @@ class PiClock(AppBase):
     # Instantiate an API caller object, then use it to seed initial data
     self.caller = ApiCaller()
     self.clockVars = {}
+    self.tempHistory = [None] * 24
     self.getData()    
     self.updateClockVars = True
     
@@ -47,7 +48,14 @@ class PiClock(AppBase):
     # Calls API, or reverts to using cached data if too many calls have been made
     self.caller.getAndParse()
     self.weather = self.caller.currentWeather
-    self.forecast = self.caller.forecast  
+    self.forecast = self.caller.forecast 
+    
+    # Update 24 hour temp history
+    self.tempHistory.append( int(self.weather[0]['Temperature']['Imperial']['Value']) )
+    print(self.tempHistory)
+    
+    if len( self.tempHistory ) > 24:
+        self.tempHistory.pop(0) 
 
     self.selectCurrentWeatherIcon()
     self.defineClockVars()
@@ -101,8 +109,8 @@ class PiClock(AppBase):
 
     # Set colors
     timeColor = graphics.Color(255, 255, 255)
-    hiColor = graphics.Color(255, 0, 0)
-    loColor = graphics.Color(0, 0, 255)
+    hiColor = graphics.Color(175, 100, 0)
+    loColor = graphics.Color(0, 100, 175)
 
     # Set text positions
     x_pos = 2
@@ -325,14 +333,61 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, midRowFont, rain_pos, y_pos + 22, timeColor, rainChance)
       graphics.DrawText(offscreen_canvas, smallFont, percent_pos, y_pos + 21 + large_num_offset, timeColor, "%")
 
-      # Draw bottom info bar 
+      # Draw bottom temp graph
+      nonNullTempHistory = []
+      maxTemp = max(self.tempHistory)
+      minTemp = maxTemp
       
-      # CURRENTLY NOT IMPLEMENTED!
+      for temp in self.tempHistory:
+        if temp == None:
+          nonNullTempHistory.append(0)
+        else:
+          nonNullTempHistory.append(temp)
+          if temp < minTemp:
+            minTemp = temp
+            
+      graphics.DrawText(offscreen_canvas, smallFont, 1, 64, loColor, "Min:" + str(minTemp))
+      graphics.DrawText(offscreen_canvas, smallFont, 64 - ( len("Max:" + str(maxTemp)) * 4), 64, hiColor, "Max:" + str(maxTemp))
+            
+      if self.tempHistory.count(None) == 23:
+        minTemp = 0
       
-      # graphics.DrawText(offscreen_canvas, smallFont, x_pos - 2, bottom_bar_y, hiColor, "HI")
-      # graphics.DrawText(offscreen_canvas, smallFont, x_pos + 6, bottom_bar_y, timeColor, "79")
-      # DrawText(offscreen_canvas, smallFont, x_pos + 15, bottom_bar_y, loColor, "LO")
-      # graphics.DrawText(offscreen_canvas, smallFont, x_pos + 23, bottom_bar_y, timeColor, "59")
+      for pt in range(0, len(nonNullTempHistory)): 
+        if maxTemp == minTemp:
+          scaledTemp = 0.5
+        else:
+          scaledTemp = float(nonNullTempHistory[pt] - minTemp) / (maxTemp - minTemp)
+          
+        if scaledTemp < 0:
+          scaledTemp = 0
+        
+        point_pos = int( 57 - ( scaledTemp * 13 ) )
+        
+        offscreen_canvas.SetPixel(8 + (2 * pt), point_pos, 0,255,150)
+        
+        for y in range(0, 58 - point_pos):
+          offscreen_canvas.SetPixel(8 + (2 * pt), point_pos + y, 0,255,150)
+          
+        if pt == len(nonNullTempHistory) - 1:
+          offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos, 0,255,150)
+          for y in range(0, 58 - point_pos):
+            offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos + y, 0,255,150)
+        else:
+          if maxTemp == minTemp:
+            nextScaledTemp = 0.5
+          else:
+            nextScaledTemp = float(nonNullTempHistory[pt + 1] - minTemp) / (maxTemp - minTemp)
+            
+          avgScaledTemp = float(scaledTemp + nextScaledTemp) / 2
+          
+          if avgScaledTemp < 0:
+            avgScaledTemp = 0
+            
+          point_pos = int( 57 - ( avgScaledTemp * 13 ) )
+          
+          offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos, 0,255,150)
+          for y in range(0, 58 - point_pos):
+            offscreen_canvas.SetPixel(8 + (2 * pt) + 1, point_pos + y, 0,255,150)
 
       time.sleep(0.05)
       offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
