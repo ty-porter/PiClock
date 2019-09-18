@@ -349,7 +349,7 @@ class PiClock(AppBase):
       graphics.DrawText(offscreen_canvas, smallFont, 1, 64, loColor, "Min:" + str(minTemp))
       graphics.DrawText(offscreen_canvas, smallFont, 64 - ( len("Max:" + str(maxTemp)) * 4), 64, hiColor, "Max:" + str(maxTemp))
             
-      if self.tempHistory.count(None) == 23:
+      if self.tempHistory.count(None) > 0 and maxTemp == minTemp:
         minTemp = 0
       
       for pt in range(0, len(nonNullTempHistory)): 
