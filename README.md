@@ -6,13 +6,13 @@ PiClock is designed to work around a low API call limit imposed by AccuWeather. 
 
 PiClock was built with a proximity sensor in order to enable changes in brightness by hand gestures. No worries if your build doesn't use one! It's disabled by default, and can be re-enabled with a simple command line flag.
 
-![PiClock](https://i.imgur.com/Z5RS6eY.jpg)
+![PiClock](https://i.imgur.com/WRlIgvr.jpg)
 
 ## Required Hardware
 
 I recommend using products from Adafruit as that is where I sourced the hardware. Other sources may not be compatible with PiClock.
 
-* **Raspberry Pi Model 3** -- *2 will most likely work but is untested*
+* **Raspberry Pi Model 3 B+** -- *Other models may work*
 * **LED board**
 * **[Adafruit RGB Matrix HAT](https://www.adafruit.com/product/2345)**
 * **5V, 2A OR 4A Power cable for LED board** -- *Optional, but recommended to avoid overloading the Pi's power supply*
@@ -115,9 +115,9 @@ to run PiClock on a 64x64 display.
 | --led-multiplexing |  Multiplexing type: 0=direct; 1=strip; 2=checker; 3=spiral; 4=ZStripe; 5=ZnMirrorZStripe; 6=coreman; 7=Kaler2Scan; 8=ZStripeUneven (Default: 0) |
 
 ## Contributing
-### 1.0.0 and onwards
+### 1.2.0 and onwards
 
-PiClock as of 1.0.0 is a fully functional clock with day / date and weather integration. I would also like to add hourly temperature graphing as well as other features, such as a calendar or event reminder page, with future releases.
+PiClock as of 1.2.0 is a fully functional clock with day / date and weather integration. I would also like to add other features, such as a calendar or event reminder page, with future releases.
 
 I am also currently accepting feedback on whether to adapt this kind of clock to a lower resolution display. This would eliminate the need to pass through panel dimensions as arguments when running the display from the terminal.
 
